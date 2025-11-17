@@ -1,77 +1,207 @@
-# Deployment Guide for React SPA Routing
+# 📘 SafeSpace Admin Web
 
-This project has been configured to handle client-side routing properly across different hosting platforms.
+Comprehensive admin dashboard and management platform for SafeSpace healthcare services.
 
-## What was fixed:
+## 📑 Table of Contents
 
-The 404 error on page refresh occurs because React Router uses client-side routing, but the server doesn't know to serve `index.html` for all routes. 
+- [About the Project](#-about-the-project)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Installation](#️-installation)
+- [Usage](#️-usage)
+- [API Endpoints](#-api-endpoints-optional)
+- [Screenshots](#-screenshots)
+- [Environment Variables](#-environment-variables)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact](#contact)
 
-## Files created/modified:
+## 📖 About the Project
 
-1. **`vite.config.ts`** - Enhanced with preview configuration
-2. **`public/_redirects`** - For Netlify, Vercel, and other platforms
-3. **`public/.htaccess`** - For Apache servers
-4. **`public/vercel.json`** - Specific configuration for Vercel
-5. **`public/netlify.toml`** - Specific configuration for Netlify
-6. **`public/nginx.conf`** - Sample nginx configuration
+SafeSpace Admin Web is a modern, secure admin dashboard built to manage users, doctors, entertainment content, and analytics for the SafeSpace healthcare platform. It provides administrators with powerful tools to:
 
-## How to deploy:
+* Manage user accounts and roles
+* Oversee doctor profiles and availability
+* Monitor entertainment content
+* Track analytics and generate reports
+* Ensure data security and authentication
 
-### For most platforms:
-1. Run `npm run build` to generate the `dist` folder
-2. Deploy the `dist` folder contents
-3. The appropriate configuration file will be automatically used
+Built with React, TypeScript, and Supabase for real-time data management and enterprise-grade security.
 
-### Platform-specific:
+This admin web is part of the SafeSpace platform ecosystem, which includes:
 
-#### Netlify:
-- Deploy the `dist` folder
-- `_redirects` file will be used automatically
+- **SafeSpace Main App**: [https://github.com/DhanukaRathnayaka/Final_Year_Project.git](https://github.com/DhanukaRathnayaka/Final_Year_Project.git)
+- **SafeSpace Doctor App**: [https://github.com/SarithDedunu/safespace-doctor-app.git](https://github.com/SarithDedunu/safespace-doctor-app.git)
 
-#### Vercel:
-- Deploy the `dist` folder  
-- `vercel.json` file will be used automatically
+## ⭐ Features
 
-#### Apache servers:
-- Deploy `dist` folder
-- Ensure `.htaccess` is copied to the root of your deployment
+* **User Management** - Create, update, and manage user accounts with role-based access control
+* **Doctor Management** - Oversee doctor profiles, credentials, and availability
+* **Entertainment Module** - Manage and moderate entertainment content
+* **Admin Dashboard** - View comprehensive analytics and system metrics
+* **Reports Generation** - Create and export detailed reports
+* **Real-time Authentication** - Secure login and session management
+* **Responsive Design** - Mobile-friendly admin interface
+* **Role-Based Access Control** - Different permission levels for admin users
 
-#### Nginx:
-- Use the provided `nginx.conf` configuration
-- Adjust paths as needed for your setup
+## 🛠 Tech Stack
 
-## Testing locally:
+* **Frontend:** React 18+, TypeScript, Tailwind CSS, Vite
+* **Runtime:** Node.js v23.5.0
+* **State Management:** Zustand
+* **Backend/Database:** Supabase (PostgreSQL)
+* **Authentication:** JWT-based with Supabase Auth
+* **API Communication:** RESTful APIs
+* **Build Tools:** Vite, PostCSS, ESLint
+* **Deployment:** Vercel
+* **Version Control:** Git
 
-After building, you can test the production build:
+## 📂 Project Structure
+
+```
+safespace-admin_web/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── Layout.tsx
+│   │   ├── Navbar.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── TestConnection.tsx
+│   ├── pages/              # Page components
+│   │   ├── Dashboard.tsx
+│   │   ├── AdminManagement.tsx
+│   │   ├── Doctors.tsx
+│   │   ├── Users.tsx
+│   │   ├── Analytics.tsx
+│   │   ├── Entertainment.tsx
+│   │   ├── Reports.tsx
+│   │   ├── Login.tsx
+│   │   └── AdminProfile.tsx
+│   ├── lib/                # Services and utilities
+│   │   ├── supabase.ts
+│   │   ├── authService.ts
+│   │   ├── adminService.ts
+│   │   ├── userService.ts
+│   │   └── entertainmentService.ts
+│   ├── providers/          # Context providers
+│   │   ├── AuthContext.ts
+│   │   └── AuthProvider.tsx
+│   ├── store/              # State management (Zustand)
+│   │   ├── authStore.ts
+│   │   └── adminStore.ts
+│   ├── types/              # TypeScript type definitions
+│   │   └── supabase.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── public/                 # Static assets
+├── supabase/              # Supabase migrations
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── tailwind.config.cjs
+└── README.md
+```
+
+## ⚙️ Installation
+
+1️⃣ Clone the repository
+```bash
+git clone https://github.com/GayangaBandara/safespace-admin_web.git
+cd safespace-admin_web
+```
+
+2️⃣ Install dependencies
+```bash
+npm install
+```
+
+3️⃣ Set up environment variables
+
+Create a `.env.local` file in the root directory:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4️⃣ Start the development server
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`
+
+## ▶️ Usage
+
+**Development Mode**
+```bash
+npm run dev
+```
+
+**Build for Production**
 ```bash
 npm run build
+```
+
+**Preview Production Build**
+```bash
 npm run preview
 ```
 
-Then navigate to different routes and refresh - they should work without 404 errors.
+**Lint Code**
+```bash
+npm run lint
+```
 
-## Important notes:
+### Key Features Usage
 
-- All hosting platforms handle SPA routing slightly differently
-- The configuration ensures that any non-API route serves `index.html`
-- Your React Router will then handle the routing on the client side
-- API routes (if any) are excluded from the fallback
+* **Login** - Access the admin panel using your credentials
+* **Dashboard** - View system overview and key metrics
+* **Manage Users** - Create, update, and delete user accounts
+* **Manage Doctors** - Handle doctor profiles and specializations
+* **Entertainment** - Moderate and manage entertainment content
+* **Analytics** - View detailed analytics and reports
 
-## Quick deployment steps:
+## 📡 API Endpoints
 
-1. **Build the project:**
-   ```bash
-   npm run build
-   ```
+The admin web communicates with Supabase services. Key endpoints include:
 
-2. **Deploy the `dist` folder** to your hosting platform
+| Service      | Method | Endpoint              | Description               |
+| ------------ | ------ | --------------------- | ------------------------- |
+| Auth         | POST   | /auth/v1/token        | Authenticate user         |
+| Users        | GET    | /users                | Fetch all users           |
+| Users        | POST   | /users                | Create new user           |
+| Doctors      | GET    | /doctors              | Fetch all doctors         |
+| Doctors      | POST   | /doctors              | Create new doctor         |
+| Entertainment| GET    | /entertainment        | Fetch entertainment items |
+| Admin        | GET    | /admin/roles          | Fetch admin roles         |
 
-3. **Test by refreshing pages** - the 404 error should now be resolved
+## 📸 Screenshots
 
-The configuration files will automatically handle routing for all popular hosting platforms including:
-- Netlify
-- Vercel
-- GitHub Pages
-- Apache servers
-- Nginx servers
-- And many others
+![Admin Dashboard](src/assets/Admin%20Dashboard.jpg)
+
+
+## 🔐 Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+VITE_SUPABASE_URL=https://your-supabase-instance.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
+
+**Required Variables:**
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous/public key
+
+
+### Code Style Guidelines
+- Use TypeScript for type safety
+- Follow ESLint configuration
+- Write meaningful commit messages
+- Add comments for complex logic
+
+## 📄 License
+
+This project is licensed under the MIT License – free to use and modify. See LICENSE file for details.
+
