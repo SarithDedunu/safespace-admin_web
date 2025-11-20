@@ -37,6 +37,7 @@ const AdminProfile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -47,9 +48,13 @@ const AdminProfile = () => {
         full_name: admin.full_name || '',
         email: admin.email || '',
       });
+      setCurrentAvatarUrl(admin.avatar_url || null);
       fetchActivityLogs();
       fetchStats();
     }
+  // We intentionally only re-run this when `admin` changes.
+  // `fetchActivityLogs` and `fetchStats` are stable for this component.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admin]);
 
   const fetchActivityLogs = async () => {
@@ -247,41 +252,38 @@ const AdminProfile = () => {
       // Step 1: Upload to Supabase Storage
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${admin.id}_${Date.now()}.${fileExt}`;
-      const filePath = `admin-avatars/${fileName}`; // Updated filePath
+      // We store all avatars under a subfolder in the "avatars" bucket.
+      // The Supabase dashboard shows a bucket named `avatars` with a folder `admin-avatars`.
+      // Use the bucket name exactly and put files under `admin-avatars/${fileName}`.
+      const bucketName = 'avatars';
+      const folder = 'admin-avatars';
+      const filePath = `${folder}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars') // Correct bucket name
-        .upload(filePath, avatarFile);
+        .from(bucketName)
+        .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type, cacheControl: '3600' });
 
       if (uploadError) {
         if (uploadError.message.includes('Bucket not found')) {
-          throw new Error('Storage Error: Bucket "admin-avatars" not found. Please create it in your Supabase dashboard.');
+          throw new Error('Storage Error: Bucket "avatars" not found. Please create it in your Supabase dashboard.');
         }
         if (uploadError.message.includes('security policy')) {
-            throw new Error(`Storage RLS Error: ${uploadError.message}. Check policies on storage.objects for the 'admin-avatars' bucket.`);
+            throw new Error(`Storage RLS Error: ${uploadError.message}. Check policies on storage.objects for the 'avatars' bucket.`);
         }
         throw uploadError;
       }
 
       // Step 2: Get public URL with a cache-busting parameter
       const { data } = supabase.storage
-        .from('avatars') // Correct bucket name
-        .getPublicUrl(filePath, {
-            transform: {
-                // `updated_at` is a trick to bust the cache.
-                // You can use any value that changes when the file is updated.
-                // 'tr:updated_at' is not a real transformation, but it makes the URL unique.
-                // Supabase Storage will ignore it but it will bypass the cache.
-                // For this to work, you may need to enable 'cacheControl' on your bucket to a low value like 'no-cache'
-                // or ensure your storage policies are correct.
-                // I am adding this as a precaution.
-                // The most reliable way is to make sure your state management is correct.
-                // A simpler alternative is `new Date().getTime()` as a query param.
-                // I will use that for simplicity.
-                // `?t=${new Date().getTime()}`
-            }
-        });
+        .from(bucketName)
+        .getPublicUrl(filePath);
 
+      // Ensure public URL exists
+      if (!data?.publicUrl) {
+        throw new Error('Failed to generate public URL for uploaded avatar.');
+      }
+
+      // Add a cache-busting parameter so browsers show the updated image right away.
       const avatarUrl = `${data.publicUrl}?t=${new Date().getTime()}`;
 
       // Step 3: Update admin profile with the new avatar URL
@@ -302,6 +304,9 @@ const AdminProfile = () => {
         }
         throw updateError;
       }
+
+      // Update local state immediately
+      setCurrentAvatarUrl(avatarUrl);
 
       // Refresh admin data
       await fetchAdminProfile();
@@ -408,7 +413,11 @@ const AdminProfile = () => {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <img
-                          src={avatarPreview || admin?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin?.full_name || admin?.email || 'Admin')}&background=4f46e5&color=fff&size=80`}
+                          src={
+                            avatarPreview ||
+                            (currentAvatarUrl ? `${currentAvatarUrl}${currentAvatarUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}` : null) ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(admin?.full_name || admin?.email || 'Admin')}&background=4f46e5&color=fff&size=80`
+                          }
                           alt="Avatar preview"
                           className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                         />
@@ -493,7 +502,10 @@ const AdminProfile = () => {
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={admin?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin?.full_name || admin?.email || 'Admin')}&background=4f46e5&color=fff&size=64`}
+                      src={
+                        (currentAvatarUrl ? `${currentAvatarUrl}${currentAvatarUrl.includes('?') ? '&' : '?'}t=${new Date().getTime()}` : null) ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(admin?.full_name || admin?.email || 'Admin')}&background=4f46e5&color=fff&size=64`
+                      }
                       alt="Profile avatar"
                       className="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
                     />

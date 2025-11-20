@@ -35,7 +35,7 @@ const Navbar = () => {
               {admin?.avatar_url ? (
                 <img
                   className="h-8 w-8 rounded-full object-cover"
-                  src={admin.avatar_url}
+                  src={`${admin.avatar_url}${admin.avatar_url.includes('?') ? '&' : '?'}t=${new Date().getTime()}`}
                   alt="Admin avatar"
                 />
               ) : (
